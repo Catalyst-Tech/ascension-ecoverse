@@ -1,13 +1,344 @@
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: #0f0f0f;
+  color: #fafafa;
+  max-width: 1224px;
+  font-family: "Nunito", sans-serif;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+  background-color: #0f0f0f;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #424242;
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
 }
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  line-height: 1;
+  margin: 0;
+}
+
+h1 {
+  font-size: 48px;
+}
+
+h2 {
+  font-size: 32px;
+  font-weight: 600;
+  margin-top: 32px;
+}
+
+h3 {
+  margin-top: 32px;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+p {
+  color: #bababa;
+  max-width: 75ch;
+}
+
+article {
+  display: -ms-grid;
+  display: grid;
+  justify-items: center;
+  text-align: center;
+}
+
+a {
+  color: #65cd3c;
+}
+
+ul {
+  color: #bababa;
+  padding-left: 0;
+}
+
+.table-container {
+  max-width: 90vw;
+  overflow-x: scroll;
+  margin-top: 32px;
+}
+
+table {
+  border: 1px solid #2e2e2e;
+  border-radius: 4px;
+  overflow: auto;
+  width: 90vw;
+}
+
+table thead {
+  background-color: #0f0f0f;
+}
+
+table th {
+  color: #949494;
+  font-size: 14px;
+}
+
+table td,
+table th {
+  padding: 16px;
+  min-width: 20ch;
+  text-align: left;
+}
+
+table tr {
+  -webkit-box-shadow: 0 1px 0 0 #2e2e2e;
+          box-shadow: 0 1px 0 0 #2e2e2e;
+}
+
+table tbody tr:last-child {
+  -webkit-box-shadow: none;
+          box-shadow: none;
+}
+
+.button {
+  padding: 16px;
+  background-color: #65cd3c;
+  color: #0f0f0f;
+  text-decoration: none;
+  display: -webkit-inline-box;
+  display: -ms-inline-flexbox;
+  display: inline-flex;
+  text-transform: capitalize;
+  border-radius: 4px;
+  width: -webkit-fit-content;
+  width: -moz-fit-content;
+  width: fit-content;
+}
+
+.button--cta {
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.button--2nd {
+  background-color: #0f0f0f;
+  border: 1px solid #fafafa;
+  color: #fafafa;
+}
+
+li {
+  list-style: none;
+}
+
+img {
+  inline-size: 100%;
+  block-size: 100%;
+  -o-object-fit: cover;
+     object-fit: cover;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.header {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: justify;
+      -ms-flex-pack: justify;
+          justify-content: space-between;
+}
+
+.menu {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  gap: 32px;
+}
+
+.main {
+  display: -ms-grid;
+  display: grid;
+  grid-gap: 64px;
+}
+
+.banner {
+  display: -ms-grid;
+  display: grid;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  grid-gap: 32px;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+}
+
+.banner__copy {
+  display: -ms-grid;
+  display: grid;
+  text-align: center;
+}
+
+.banner__subheading {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.banner__image {
+  position: relative;
+}
+
+.banner__image img {
+  max-height: 512px;
+  max-width: 512px;
+}
+
+.banner__image .button {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  -webkit-transform: translateX(-50%);
+          transform: translateX(-50%);
+  -webkit-box-shadow: 0 0 0 8px #0f0f0f;
+          box-shadow: 0 0 0 8px #0f0f0f;
+}
+
+.socials {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  gap: 16px;
+}
+
+.socials a {
+  padding: 0;
+  height: 48px;
+  width: 48px;
+  display: -webkit-inline-box;
+  display: -ms-inline-flexbox;
+  display: inline-flex;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  border: 1px solid #65cd3c;
+  border-radius: 4px;
+}
+
+.socials a svg {
+  width: 24px;
+  height: 24px;
+}
+
+.stack {
+  display: -ms-grid;
+  display: grid;
+  grid-gap: 32px;
+}
+
+.stack--jic {
+  justify-items: center;
+}
+
+.media-shelf-container {
+  display: -ms-grid;
+  display: grid;
+  position: relative;
+  margin: 0 -32px 32px;
+}
+
+.media-shelf-container:before {
+  content: "";
+  height: 100%;
+  width: 32px;
+  background: -webkit-gradient(linear, left top, right top, from(rgba(15, 15, 15, 0.5)), to(rgba(15, 15, 15, 0)));
+  background: linear-gradient(90deg, rgba(15, 15, 15, 0.5), rgba(15, 15, 15, 0));
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.media-shelf-container:after {
+  content: "";
+  height: 100%;
+  width: 32px;
+  background: -webkit-gradient(linear, right top, left top, from(rgba(15, 15, 15, 0.5)), to(rgba(15, 15, 15, 0)));
+  background: linear-gradient(270deg, rgba(15, 15, 15, 0.5), rgba(15, 15, 15, 0));
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+.media-shelf {
+  --size: 256px;
+  --gap: 32px;
+  display: -ms-grid;
+  display: grid;
+  grid-auto-flow: column;
+  gap: calc(var(--gap) / 2);
+  margin: 0;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  padding-inline: var(--gap);
+  scroll-padding-inline: var(--gap);
+  padding-block: calc(var(--gap) / 2);
+  -ms-scroll-snap-type: inline mandatory;
+      scroll-snap-type: inline mandatory;
+}
+
+.media-shelf li {
+  display: inline-block;
+}
+
+.media-shelf figure {
+  display: -ms-grid;
+  display: grid;
+  gap: calc(var(--gap) / 2);
+  margin: 0;
+  scroll-snap-align: start;
+  background: #1a1a1a;
+  padding: 10px;
+  padding-bottom: 32px;
+  border-radius: 4px;
+}
+
+.media-shelf figcaption {
+  text-transform: capitalize;
+  font-weight: 600;
+  font-size: 20px;
+}
+
+.media-shelf picture {
+  inline-size: var(--size);
+  block-size: var(--size);
+}
+
+.media-shelf li:last-of-type figure {
+  position: relative;
+}
+
+.media-shelf li:last-of-type figure::after {
+  content: "";
+  position: absolute;
+  inline-size: var(--gap);
+  block-size: 100%;
+  inset-block-start: 0;
+  inset-inline-end: calc(var(--gap) * -1);
+}
+
+footer {
+  margin-top: 128px;
+  text-align: center;
+}
+/*# sourceMappingURL=index.css.map */
