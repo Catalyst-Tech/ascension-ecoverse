@@ -3,56 +3,39 @@ import {
   AmbientLight,
   AnimationAction,
   AnimationMixer,
-  ArrowHelper,
-  BasicShadowMap,
   BoxGeometry,
-  BufferAttribute,
-  CameraHelper,
   Clock,
   Color,
-  ConeGeometry,
   DirectionalLight,
-  DirectionalLightHelper,
-  Fog,
   GLSL3,
   GridHelper,
   Group,
   HemisphereLight,
-  HemisphereLightHelper,
-  Material,
-  Matrix4,
   Mesh,
-  MeshBasicMaterial,
-  MeshNormalMaterial,
   MeshStandardMaterial,
-  MeshToonMaterial,
-  Object3D,
   OctahedronGeometry,
   PCFSoftShadowMap,
   PerspectiveCamera,
   PlaneGeometry,
-  Quaternion,
-  RawShaderMaterial,
   Raycaster,
   Scene,
   ShaderMaterial,
-  TextureLoader,
   Vector2,
   Vector3,
   WebGLRenderer,
 } from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+// import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass";
 // import { OutlinePass } from "three/examples/jsm/postprocessing/OutlinePass";
 // import { Sky } from "three/examples/jsm/objects/Sky";
-import { Pane } from "tweakpane";
+// import { Pane } from "tweakpane";
 import Stats from "three/examples/jsm/libs/stats.module";
-import shader_01 from "../shaders/shader_01";
-import shader_02 from "../shaders/shader_02";
+// import shader_01 from "../shaders/shader_01";
+// import shader_02 from "../shaders/shader_02";
 import { degreesToRadian } from "../helpers";
-import { ImprovedNoise } from "three/examples/jsm/math/ImprovedNoise";
+// import { ImprovedNoise } from "three/examples/jsm/math/ImprovedNoise";
 import { clamp } from "three/src/math/MathUtils";
 import shader_sea from "../shaders/shader_sea";
 // import gsap from "gsap";
@@ -81,15 +64,15 @@ const Viewport: React.FC = () => {
     // variables
     let skyColor = "#a3c9fe";
     let sunColor = "#f4f3f1";
-    let grassColor = "#2b4626";
+    // let grassColor = "#2b4626";
     let grassLightReflection = "#6ec47d";
 
     // pane
-    const pane = new Pane();
+    // const pane = new Pane();
     // pane.addInput(ground.position, "y", { min: -10, max: 10, step: 0.01 });
 
     // materials
-    const material = new MeshStandardMaterial({ color: grassColor });
+    // const material = new MeshStandardMaterial({ color: grassColor });
     const material2 = new MeshStandardMaterial({ color: "#441f28" });
     const material3 = new MeshStandardMaterial({ color: "#1b4077" });
     const material4 = new MeshStandardMaterial({ color: "#793096" });
