@@ -40,23 +40,22 @@ import { clamp } from "three/src/math/MathUtils";
 import shader_sea from "../shaders/shader_sea";
 // import gsap from "gsap";
 
-const heightRatio = 1;
-
 const Viewport: React.FC = () => {
   const viewport = useRef<HTMLCanvasElement | null>(null);
-
-  const [viewportWidth, setViewportWidth] = useState(window.innerWidth);
-  const [viewportHeight, setViewportHeight] = useState(
-    window.innerHeight * heightRatio
+  const viewportDimensions = useRef(
+    new Vector2(window.innerWidth, window.innerHeight)
   );
-  const [viewportAspectRatio, setViewportAspectRatio] = useState(
-    viewportWidth / viewportHeight
-  );
+  const viewportAspectRatio = useRef(window.innerWidth / window.innerHeight);
   const destination = useRef(new Vector3());
   const mouseCoordinates = useRef(new Vector2());
   const mouseLocation = useRef(new Vector3());
+  const cameraPosition = useRef(new Vector3(0, 50, 50));
+  const characterPosition = useRef(new Vector3(0, 0, 0));
 
   useEffect(() => {
+    console.log("INITIALIZE");
+    console.log(cameraPosition.current);
+
     // stats
     let stats = Stats();
     document.body.appendChild(stats.dom);
@@ -66,6 +65,10 @@ const Viewport: React.FC = () => {
     let sunColor = "#f4f3f1";
     // let grassColor = "#2b4626";
     let grassLightReflection = "#6ec47d";
+
+    // setup scene
+    const scene = new Scene();
+    scene.background = new Color(skyColor);
 
     // pane
     // const pane = new Pane();
@@ -103,6 +106,7 @@ const Viewport: React.FC = () => {
     const fbxLoader = new FBXLoader();
     fbxLoader.load("/models/jenna_idle.fbx", (charFBX) => {
       charFBX.scale.set(0.1, 0.1, 0.1);
+      charFBX.position.copy(characterPosition.current);
       // charFBX.position.set(100, 0, 100);
       charFBX.traverse((child) => {
         if ((child as any).isMesh) {
@@ -183,10 +187,11 @@ const Viewport: React.FC = () => {
       zoom: 50,
       angle: -45,
     };
-    const camera = new PerspectiveCamera(50, viewportAspectRatio);
+    const camera = new PerspectiveCamera(50, viewportAspectRatio.current);
     // camera.position.x = -cameraSettings.zoom / 1.5;
-    camera.position.y = cameraSettings.zoom;
-    camera.position.z = cameraSettings.zoom;
+    // camera.position.y = cameraSettings.zoom;
+    // camera.position.z = cameraSettings.zoom;
+    camera.position.copy(cameraPosition.current);
     camera.rotateX(degreesToRadian(cameraSettings.angle));
 
     // setup controls
@@ -195,9 +200,6 @@ const Viewport: React.FC = () => {
     // controls.enabled = false;
     // pane.addInput(controls, "enabled");
 
-    // setup scene
-    const scene = new Scene();
-    scene.background = new Color(skyColor);
     // scene.fog = new Fog(skyColor, 180, 200);
     scene.add(camera, cursorBox, destinationBox, rotationProxy, sea);
     const grid = new GridHelper();
@@ -233,7 +235,10 @@ const Viewport: React.FC = () => {
       canvas: viewport.current || undefined,
       antialias: true,
     });
-    renderer.setSize(viewportWidth, viewportHeight);
+    renderer.setSize(
+      viewportDimensions.current.x,
+      viewportDimensions.current.y
+    );
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = PCFSoftShadowMap;
@@ -311,9 +316,15 @@ const Viewport: React.FC = () => {
 
           animations.run();
           char.translateZ(velocity);
+          characterPosition.current.x = char.position.x;
+          characterPosition.current.y = char.position.y;
+          characterPosition.current.z = char.position.z;
           // camera follows the player
           camera.position.x = char.position.x;
           camera.position.z = char.position.z + cameraSettings.zoom;
+          cameraPosition.current.x = char.position.x;
+          cameraPosition.current.z = char.position.z + cameraSettings.zoom;
+          console.log(cameraPosition.current);
         } else {
           animations.idle();
         }
@@ -339,29 +350,35 @@ const Viewport: React.FC = () => {
 
     // handle window resize
     const handleWindowResize = () => {
-      // update viewport
-      setViewportWidth(window.innerWidth);
-      setViewportHeight(window.innerHeight * heightRatio);
-      setViewportAspectRatio(viewportWidth / viewportHeight);
+      // update viewport dimensions
+      viewportDimensions.current.x = window.innerWidth;
+      viewportDimensions.current.y = window.innerHeight;
+      viewportAspectRatio.current = window.innerWidth / window.innerHeight;
       //update camera
-      camera.aspect = viewportAspectRatio;
+      camera.aspect = viewportAspectRatio.current;
       camera.updateProjectionMatrix();
       //update renderer
-      renderer.setSize(viewportWidth, viewportHeight);
+      renderer.setSize(
+        viewportDimensions.current.x,
+        viewportDimensions.current.y
+      );
     };
     window.addEventListener("resize", handleWindowResize);
 
     // handle full screen
     const handleFullScreen = () => {
-      // update viewport
-      setViewportWidth(window.innerWidth);
-      setViewportHeight(window.innerHeight * heightRatio);
-      setViewportAspectRatio(viewportWidth / viewportHeight);
-      //update camera
-      camera.aspect = viewportAspectRatio;
-      camera.updateProjectionMatrix();
-      //update renderer
-      renderer.setSize(viewportWidth, viewportHeight);
+      // // update viewport
+      // viewportDimensions.current.x = window.innerWidth;
+      // viewportDimensions.current.y = window.innerHeight;
+      // viewportAspectRatio.current = window.innerWidth / window.innerHeight;
+      // //update camera
+      // camera.aspect = viewportAspectRatio.current;
+      // camera.updateProjectionMatrix();
+      // //update renderer
+      // renderer.setSize(
+      //   viewportDimensions.current.x,
+      //   viewportDimensions.current.y
+      // );
       if (viewport.current === null) return;
       if (!document.fullscreenElement) {
         viewport.current.requestFullscreen();
@@ -377,11 +394,13 @@ const Viewport: React.FC = () => {
       window.removeEventListener("resize", handleWindowResize);
       window.removeEventListener("dblclick", handleFullScreen);
     };
-  }, [mouseCoordinates, viewportAspectRatio, viewportHeight, viewportWidth]);
+  }, [mouseCoordinates, viewportAspectRatio]);
 
   const handleMouseMove = (event: React.MouseEvent<HTMLCanvasElement>) => {
-    mouseCoordinates.current.x = (event.clientX / viewportWidth) * 2 - 1;
-    mouseCoordinates.current.y = -(event.clientY / viewportHeight) * 2 + 1;
+    mouseCoordinates.current.x =
+      (event.clientX / viewportDimensions.current.x) * 2 - 1;
+    mouseCoordinates.current.y =
+      -(event.clientY / viewportDimensions.current.y) * 2 + 1;
   };
 
   return (
