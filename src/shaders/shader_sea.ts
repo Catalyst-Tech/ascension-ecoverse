@@ -109,8 +109,11 @@ const shader_sea = {
       }
       diffuseColor = mix(vec3(vHeight), diffuseColor, 0.98);
       // float shading = clamp(dot(lightDirection, normal), 0.8, 1.0);
-      outColor = vec4(ambientColor + lambertian * diffuseColor + specular * specularColor, 0.6);
-      // outColor = vec4(vec3(vHeight), 1.0);
+      // opacity
+      float opacityStrength = 1.0 - (distance(vUv, vec2(0.5)) / 0.275) + 1.0;
+      // float opacityStrength = 1.0 - step(0.7, distance(vUv, vec2(0.5)) + 0.25) ;
+      outColor = vec4(ambientColor + lambertian * diffuseColor + specular * specularColor, opacityStrength);
+      // outColor = vec4(vec3(opacityStrength), 1.0);
     }
   `,
 };

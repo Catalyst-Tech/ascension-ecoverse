@@ -3,16 +3,20 @@ import {
   AmbientLight,
   AnimationAction,
   AnimationMixer,
+  BackSide,
   BoxGeometry,
   Clock,
   Color,
   DirectionalLight,
+  Fog,
+  FogExp2,
   GLSL3,
   GridHelper,
   Group,
   HemisphereLight,
   Mesh,
   MeshStandardMaterial,
+  Object3D,
   OctahedronGeometry,
   PCFSoftShadowMap,
   PerspectiveCamera,
@@ -20,6 +24,7 @@ import {
   Raycaster,
   Scene,
   ShaderMaterial,
+  SphereGeometry,
   Vector2,
   Vector3,
   WebGLRenderer,
@@ -36,7 +41,7 @@ import Stats from "three/examples/jsm/libs/stats.module";
 // import shader_02 from "../shaders/shader_02";
 import { degreesToRadian } from "../helpers";
 // import { ImprovedNoise } from "three/examples/jsm/math/ImprovedNoise";
-import { clamp } from "three/src/math/MathUtils";
+import shader_sky from "../shaders/shader_sky";
 import shader_sea from "../shaders/shader_sea";
 // import gsap from "gsap";
 
@@ -47,9 +52,13 @@ const Viewport: React.FC = () => {
   );
   const viewportAspectRatio = useRef(window.innerWidth / window.innerHeight);
   const destination = useRef(new Vector3());
-  const mouseCoordinates = useRef(new Vector2());
-  const mouseLocation = useRef(new Vector3());
-  const cameraPosition = useRef(new Vector3(0, 50, 50));
+  const pointerCoordinates = useRef(new Vector2());
+  const pointerLocation = useRef(new Vector3());
+  const cameraZoom = useRef(50);
+  const cameraAngle = useRef(-20);
+  const cameraPosition = useRef(
+    new Vector3(0, cameraZoom.current / 2, cameraZoom.current)
+  );
   const characterPosition = useRef(new Vector3(0, 0, 0));
 
   useEffect(() => {
@@ -95,6 +104,21 @@ const Viewport: React.FC = () => {
       transparent: true,
       // wireframe: true,
     });
+    const skyMat = new ShaderMaterial({
+      vertexShader: shader_sky.vertex,
+      fragmentShader: shader_sky.fragment,
+      uniforms: {
+        topColor: { value: new Color(skyColor) },
+        bottomColor: { value: new Color(sunColor) },
+        offset: { value: 50 },
+        exponent: { value: 0.2 },
+      },
+      glslVersion: GLSL3,
+      side: BackSide,
+    });
+    const skyGeo = new SphereGeometry(1200, 32, 15);
+    const sky = new Mesh(skyGeo, skyMat);
+    scene.add(sky);
 
     // loading models
     let mixer: AnimationMixer;
@@ -146,20 +170,21 @@ const Viewport: React.FC = () => {
       run: () => setAction(animationActions[1]),
     };
 
-    let land: Group;
-    fbxLoader.load("models/land_1.fbx", (landFBX) => {
+    let land: Object3D;
+    fbxLoader.load("models/land_3.fbx", (landFBX) => {
       // @ts-ignore
       landFBX.children[0].material = material5;
-      land = landFBX;
-      land.children[0].receiveShadow = true;
+      landFBX.children[0].receiveShadow = true;
+      land = landFBX.children[0];
       scene.add(land);
     });
 
     // sea
-    const seaGeo = new PlaneGeometry(256, 256, 40, 40);
+    const seaGeo = new PlaneGeometry(1024, 1024, 64, 64);
     const sea = new Mesh(seaGeo, seaMat);
     sea.rotation.x = (Math.PI / 2) * -1;
     sea.position.set(128, -10, 128);
+    sea.position.set(0, -10, 0);
     // sea.position.set(0, 15, 0);
 
     // box
@@ -183,16 +208,12 @@ const Viewport: React.FC = () => {
     rotationProxy.visible = false;
 
     // setup camera
-    let cameraSettings = {
-      zoom: 50,
-      angle: -45,
-    };
     const camera = new PerspectiveCamera(50, viewportAspectRatio.current);
     // camera.position.x = -cameraSettings.zoom / 1.5;
     // camera.position.y = cameraSettings.zoom;
     // camera.position.z = cameraSettings.zoom;
     camera.position.copy(cameraPosition.current);
-    camera.rotateX(degreesToRadian(cameraSettings.angle));
+    camera.rotateX(degreesToRadian(cameraAngle.current));
 
     // setup controls
     // const controls = new OrbitControls(camera, viewport.current || undefined);
@@ -200,7 +221,8 @@ const Viewport: React.FC = () => {
     // controls.enabled = false;
     // pane.addInput(controls, "enabled");
 
-    // scene.fog = new Fog(skyColor, 180, 200);
+    // scene.fog = new Fog(skyColor, 200, 500);
+    scene.fog = new FogExp2(skyColor, 0.002);
     scene.add(camera, cursorBox, destinationBox, rotationProxy, sea);
     const grid = new GridHelper();
     scene.add(grid);
@@ -253,12 +275,12 @@ const Viewport: React.FC = () => {
     const clock = new Clock();
 
     // movement
-    let velocity = 0.2;
-    // let destination = new Vector3(5, 0, 5);
+    let velocity = 0.23;
     let destinationErrorMargin = 4;
 
     // ray caster
-    const raycaster = new Raycaster();
+    const destinationRaycaster = new Raycaster();
+    const characterGravityRaycaster = new Raycaster();
 
     // update
     const update = () => {
@@ -275,26 +297,21 @@ const Viewport: React.FC = () => {
       // animation
       if (mixer) mixer.update(delta);
 
-      // ground ray tracing
-      if (land) {
-        destinationBox.position.x = destination.current.x;
-        destinationBox.position.z = destination.current.z;
-        destinationBox.position.y = clamp(destination.current.y, -5, 10);
-        raycaster.setFromCamera(mouseCoordinates.current, camera);
-        const objectsToTest = [land];
-        const intersects = raycaster.intersectObjects(objectsToTest);
-        for (const intersect of intersects) {
-          cursorBox.position.x = intersect.point.x;
-          cursorBox.position.y = clamp(intersect.point.y, -10, 10);
-          cursorBox.position.z = intersect.point.z;
-          mouseLocation.current.x = intersect.point.x;
-          mouseLocation.current.y = clamp(intersect.point.y, -10, 10);
-          mouseLocation.current.z = intersect.point.z;
-        }
-      }
+      if (charReady && land) {
+        // gravity raycaster
+        const gravityRayOrigin = new Vector3(
+          char.position.x,
+          100,
+          char.position.z
+        );
+        const gravityRayDirection = new Vector3(0, -1, 0);
+        gravityRayDirection.normalize();
+        characterGravityRaycaster.set(gravityRayOrigin, gravityRayDirection);
+        const gravityRaycasterIntersects =
+          characterGravityRaycaster.intersectObject(land);
+        char.position.y = gravityRaycasterIntersects[0].point.y;
 
-      // character movement
-      if (charReady) {
+        // character movement
         // move the character towards the destination vector (if not there already)
         if (
           char.position.distanceTo(destinationBox.position) >
@@ -310,10 +327,6 @@ const Viewport: React.FC = () => {
             char.quaternion.rotateTowards(rotationProxy.quaternion, step);
           }
 
-          // destination.current.y > -2 &&
-          // destination.current.y < 10 &&
-          // char.position.y > -2
-
           animations.run();
           char.translateZ(velocity);
           characterPosition.current.x = char.position.x;
@@ -321,10 +334,10 @@ const Viewport: React.FC = () => {
           characterPosition.current.z = char.position.z;
           // camera follows the player
           camera.position.x = char.position.x;
-          camera.position.z = char.position.z + cameraSettings.zoom;
+          camera.position.z = char.position.z + cameraZoom.current;
           cameraPosition.current.x = char.position.x;
-          cameraPosition.current.z = char.position.z + cameraSettings.zoom;
-          console.log(cameraPosition.current);
+          cameraPosition.current.z = char.position.z + cameraZoom.current;
+          // console.log(cameraPosition.current);
         } else {
           animations.idle();
         }
@@ -337,16 +350,68 @@ const Viewport: React.FC = () => {
     update();
 
     // events
+
+    // handle pointer move
+    const handlePointerMove = (event: PointerEvent) => {
+      // set pointer coordinates
+      pointerCoordinates.current.x =
+        (event.clientX / viewportDimensions.current.x) * 2 - 1;
+      pointerCoordinates.current.y =
+        -(event.clientY / viewportDimensions.current.y) * 2 + 1;
+      // ray cast
+      if (land) {
+        destinationRaycaster.setFromCamera(pointerCoordinates.current, camera);
+        const intersects = destinationRaycaster.intersectObject(land, false);
+        if (intersects.length) {
+          cursorBox.position.x = intersects[0].point.x;
+          cursorBox.position.y = intersects[0].point.y + 1;
+          cursorBox.position.z = intersects[0].point.z;
+          pointerLocation.current.x = intersects[0].point.x;
+          pointerLocation.current.y = intersects[0].point.y;
+          pointerLocation.current.z = intersects[0].point.z;
+        }
+      }
+    };
+    window.addEventListener("pointermove", handlePointerMove);
+
+    // handle click
     const handleClick = () => {
-      if (mouseLocation.current.y > -10) {
+      if (pointerLocation.current.y > -10) {
         destination.current = new Vector3(
-          mouseLocation.current.x,
-          mouseLocation.current.y,
-          mouseLocation.current.z
+          pointerLocation.current.x,
+          pointerLocation.current.y,
+          pointerLocation.current.z
         );
+        // can i plug in the pointer location directly? without destination var?
+        destinationBox.position.x = destination.current.x;
+        destinationBox.position.y = destination.current.y + 0.5;
+        destinationBox.position.z = destination.current.z;
       }
     };
     window.addEventListener("click", handleClick);
+    // handle click
+    const handleKeyboardInput = (event: KeyboardEvent) => {
+      switch (event.code) {
+        case "KeyW":
+          // cube.rotation.x += 0.1;
+          console.log("w");
+          break;
+        case "KeyS":
+          console.log("s");
+          // cube.rotation.z -= 0.1;
+          break;
+        case "KeyA":
+          console.log("a");
+          // cube.rotation.x -= 0.1;
+          break;
+        case "KeyD":
+          console.log("d");
+          // camera.rotateZ(0.05);
+          // cube.rotation.z += 0.1;
+          break;
+      }
+    };
+    window.addEventListener("keydown", handleKeyboardInput);
 
     // handle window resize
     const handleWindowResize = () => {
@@ -367,18 +432,6 @@ const Viewport: React.FC = () => {
 
     // handle full screen
     const handleFullScreen = () => {
-      // // update viewport
-      // viewportDimensions.current.x = window.innerWidth;
-      // viewportDimensions.current.y = window.innerHeight;
-      // viewportAspectRatio.current = window.innerWidth / window.innerHeight;
-      // //update camera
-      // camera.aspect = viewportAspectRatio.current;
-      // camera.updateProjectionMatrix();
-      // //update renderer
-      // renderer.setSize(
-      //   viewportDimensions.current.x,
-      //   viewportDimensions.current.y
-      // );
       if (viewport.current === null) return;
       if (!document.fullscreenElement) {
         viewport.current.requestFullscreen();
@@ -390,22 +443,17 @@ const Viewport: React.FC = () => {
 
     // clean up
     return () => {
+      window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("click", handleFullScreen);
+      window.removeEventListener("keydown", handleKeyboardInput);
       window.removeEventListener("resize", handleWindowResize);
       window.removeEventListener("dblclick", handleFullScreen);
     };
-  }, [mouseCoordinates, viewportAspectRatio]);
-
-  const handleMouseMove = (event: React.MouseEvent<HTMLCanvasElement>) => {
-    mouseCoordinates.current.x =
-      (event.clientX / viewportDimensions.current.x) * 2 - 1;
-    mouseCoordinates.current.y =
-      -(event.clientY / viewportDimensions.current.y) * 2 + 1;
-  };
+  }, [pointerCoordinates, viewportAspectRatio]);
 
   return (
     <div className="viewport">
-      <canvas ref={viewport} onMouseMove={handleMouseMove}></canvas>
+      <canvas ref={viewport}></canvas>
     </div>
   );
 };
