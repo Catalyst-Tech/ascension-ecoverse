@@ -43,7 +43,11 @@ import { degreesToRadian } from "../helpers";
 // import { ImprovedNoise } from "three/examples/jsm/math/ImprovedNoise";
 import shader_sky from "../shaders/shader_sky";
 import shader_sea from "../shaders/shader_sea";
+import WindowDetails from "../game/utils/WindowDetails";
+import Game from "../game/game";
 // import gsap from "gsap";
+
+// let cameraRotation.current = 0;
 
 const Viewport: React.FC = () => {
   const viewport = useRef<HTMLCanvasElement | null>(null);
@@ -60,10 +64,12 @@ const Viewport: React.FC = () => {
     new Vector3(0, cameraZoom.current / 2, cameraZoom.current)
   );
   const characterPosition = useRef(new Vector3(0, 0, 0));
+  const cameraRotation = useRef(0);
 
   useEffect(() => {
     console.log("INITIALIZE");
     console.log(cameraPosition.current);
+    const x = new Game();
 
     // stats
     let stats = Stats();
@@ -121,8 +127,9 @@ const Viewport: React.FC = () => {
     scene.add(sky);
 
     // loading models
+    // const hero = new Group();
     let mixer: AnimationMixer;
-    let char: Group;
+    let char: Group | null = null;
     let charReady: boolean = false;
     let animationActions: AnimationAction[] = [];
     let activeAction: AnimationAction;
@@ -153,6 +160,7 @@ const Viewport: React.FC = () => {
 
       char = charFBX;
       scene.add(char);
+      // hero.add(char);
     });
     // animations
     const setAction = (action: AnimationAction) => {
@@ -171,7 +179,7 @@ const Viewport: React.FC = () => {
     };
 
     let land: Object3D;
-    fbxLoader.load("models/land_3.fbx", (landFBX) => {
+    fbxLoader.load("models/land_2.fbx", (landFBX) => {
       // @ts-ignore
       landFBX.children[0].material = material5;
       landFBX.children[0].receiveShadow = true;
@@ -207,17 +215,26 @@ const Viewport: React.FC = () => {
     const rotationProxy = new Mesh(rotationProxyGeo, material4);
     rotationProxy.visible = false;
 
+    // box
+    const cameraProxyBoxGeo = new BoxGeometry(1, 1, 1);
+    const cameraProxyBox = new Mesh(cameraProxyBoxGeo, material3);
+    destinationBox.position.y = 0.5;
+    destinationBox.position.x = 5;
+    scene.add(cameraProxyBox);
+
     // setup camera
     const camera = new PerspectiveCamera(50, viewportAspectRatio.current);
     // camera.position.x = -cameraSettings.zoom / 1.5;
     // camera.position.y = cameraSettings.zoom;
     // camera.position.z = cameraSettings.zoom;
     camera.position.copy(cameraPosition.current);
-    camera.rotateX(degreesToRadian(cameraAngle.current));
+    // if (char) camera.lookAt(char.posittion);
+    // camera.rotateX(degreesToRadian(cameraAngle.current));
 
     // setup controls
     // const controls = new OrbitControls(camera, viewport.current || undefined);
     // controls.enableDamping = true;
+    // controls.target = characterPosition.current;
     // controls.enabled = false;
     // pane.addInput(controls, "enabled");
 
@@ -297,7 +314,9 @@ const Viewport: React.FC = () => {
       // animation
       if (mixer) mixer.update(delta);
 
-      if (charReady && land) {
+      if (char && charReady && land) {
+        camera.lookAt(char.position);
+
         // gravity raycaster
         const gravityRayOrigin = new Vector3(
           char.position.x,
@@ -333,10 +352,16 @@ const Viewport: React.FC = () => {
           characterPosition.current.y = char.position.y;
           characterPosition.current.z = char.position.z;
           // camera follows the player
-          camera.position.x = char.position.x;
-          camera.position.z = char.position.z + cameraZoom.current;
-          cameraPosition.current.x = char.position.x;
-          cameraPosition.current.z = char.position.z + cameraZoom.current;
+          let cameraX =
+            Math.cos(cameraRotation.current) * 50 + characterPosition.current.x;
+          let cameraZ =
+            Math.sin(cameraRotation.current) * 50 + characterPosition.current.z;
+          camera.position.x = cameraX;
+          camera.position.z = cameraZ;
+          // camera.position.x = char.position.x;
+          // camera.position.z = char.position.z + cameraZoom.current;
+          // cameraPosition.current.x = char.position.x;
+          // cameraPosition.current.z = char.position.z + cameraZoom.current;
           // console.log(cameraPosition.current);
         } else {
           animations.idle();
@@ -393,21 +418,36 @@ const Viewport: React.FC = () => {
     const handleKeyboardInput = (event: KeyboardEvent) => {
       switch (event.code) {
         case "KeyW":
-          // cube.rotation.x += 0.1;
           console.log("w");
+          // camera.rotateOnAxis(new Vector3(1, 0, 0), Math.PI);
+          // camera.ro
           break;
         case "KeyS":
           console.log("s");
-          // cube.rotation.z -= 0.1;
           break;
         case "KeyA":
           console.log("a");
-          // cube.rotation.x -= 0.1;
-          break;
-        case "KeyD":
-          console.log("d");
-          // camera.rotateZ(0.05);
-          // cube.rotation.z += 0.1;
+          // camera.translateX(10);
+          //   console.log(characterPosition.current.z);
+          cameraRotation.current += 0.05;
+          // let cameraX =
+          //   Math.cos(cameraRotationTime) * 10 + characterPosition.current.x;
+          // let cameraZ =
+          //   Math.sin(cameraRotationTime) * 10 + characterPosition.current.z;
+
+          // cameraProxyBox.position.x = cameraX;
+          // cameraProxyBox.position.z = cameraZ;
+
+          // camera.position.x = cameraX;
+          // camera.position.z = cameraZ;
+          //   break;
+          // case "KeyD":
+          //   console.log("d");
+          //   cameraRotationTime -= 0.05;
+          //   cameraProxyBox.position.z = Math.sin(cameraRotationTime) * 10;
+          //   cameraProxyBox.position.x = Math.cos(cameraRotationTime) * 10;
+          // camera.position.z = Math.sin(cameraRotationTime) * 50;
+          // camera.position.x = Math.cos(cameraRotationTime) * 50;
           break;
       }
     };
